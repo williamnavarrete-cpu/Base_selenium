@@ -85,14 +85,29 @@ jobs:
           echo "EXECUTOR_BUILD_NAME=${{ github.workflow }} - Run #${{ github.run_number }}" >> .env
           echo "EXECUTOR_TYPE=github" >> .env
           cat .env
+        env:
+          EXECUTION_TYPE: manager
+          BROWSER: chrome
+          URL: https://hakatools.hakalab.com
+          TIME_IMPLICITY: "10"
 
       # Paso 5: Ejecutar los tests con Behave + Allure formatter
       - name: 🚀 Ejecutar escenarios con tag ${{ matrix.tag }}
+        env:
+          EXECUTION_TYPE: manager
+          BROWSER: chrome
+          URL: https://hakatools.hakalab.com
+          TIME_IMPLICITY: "10"
+          EXECUTOR_NAME: GitHub Actions
+          EXECUTOR_BUILD_NAME: "${{ github.workflow }} - Run #${{ github.run_number }}"
+          EXECUTOR_TYPE: github
         run: |
           echo "=== Verificando Chrome ==="
           google-chrome --version || true
-          echo "=== Verificando .env ==="
-          cat .env
+          echo "=== Verificando variables de entorno ==="
+          echo "EXECUTION_TYPE=$EXECUTION_TYPE"
+          echo "BROWSER=$BROWSER"
+          echo "URL=$URL"
           echo "=== Ejecutando tests ==="
           behave \
             -f allure_behave.formatter:AllureFormatter \

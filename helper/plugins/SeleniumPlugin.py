@@ -196,18 +196,6 @@ def config_driver_webdriver_manager(context):
     """
     browser = os.getenv("BROWSER", "chrome").lower()
 
-    if browser == "chrome":
-        # ChromeDriverManager().install() descarga el chromedriver correcto
-        # y retorna la ruta al ejecutable descargado
-        try:
-            service = Service(ChromeDriverManager().install())
-        except Exception as e:
-            print(f"> WebDriverManager falló: {e}")
-            print("> Intentando sin service explícito (Chrome del sistema)...")
-            service = None
-    else:
-        raise Exception(f"Navegador no soportado por WebDriver Manager: {browser}")
-
     # Configuración de opciones de Chrome
     options = webdriver.ChromeOptions()
 
@@ -222,11 +210,17 @@ def config_driver_webdriver_manager(context):
     options.add_argument("--headless=new")            # Ejecuta sin interfaz gráfica (necesario en CI)
     options.add_argument("--window-size=1920,1080")   # Resolución fija para screenshots consistentes
 
-    # Crea la instancia del navegador con el service y las opciones
-    if service:
-        context.browser = webdriver.Chrome(service=service, options=options)
+    if browser == "chrome":
+        # Intenta usar ChromeDriverManager para descargar el driver
+        # Si falla (ej: en CI con Chrome preinstalado), usa Chrome directamente
+        try:
+            service = Service(ChromeDriverManager().install())
+            context.browser = webdriver.Chrome(service=service, options=options)
+        except Exception as e:
+            print(f"> WebDriverManager falló ({e}), usando Chrome del sistema...")
+            context.browser = webdriver.Chrome(options=options)
     else:
-        context.browser = webdriver.Chrome(options=options)
+        raise Exception(f"Navegador no soportado por WebDriver Manager: {browser}")
     return context.browser
 
 
@@ -268,7 +262,10 @@ class SeleniumPlugin:
         """
         # load_dotenv lee el archivo .env y carga las variables al entorno
         # Esto permite cambiar configuración sin modificar código
-        load_dotenv(dotenv_path=".env")
+        load_dotenv(dotenv_path=".env", override=True)
+
+        # Debug: verificar que las variables se cargaron
+        print(f"> ENV cargado - EXECUTION_TYPE={os.getenv('EXECUTION_TYPE')}, BROWSER={os.getenv('BROWSER')}")
 
         # Ejecuta toda la lógica de inicialización del navegador
         execution_selenium(context)
