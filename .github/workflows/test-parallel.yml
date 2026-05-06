@@ -134,8 +134,10 @@ jobs:
           mkdir -p allure-results/history
           if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
             git fetch origin gh-pages --depth=1
-            git checkout origin/gh-pages -- history/ 2>/dev/null || true
-            cp -r history/* allure-results/history/ 2>/dev/null || true
+            git checkout origin/gh-pages -- last-history/ 2>/dev/null || true
+            if [ -d "last-history" ]; then
+              cp -r last-history/* allure-results/history/ 2>/dev/null || true
+            fi
           fi
 
       # Paso 5: Generar el reporte HTML con Allure
@@ -143,10 +145,18 @@ jobs:
         uses: simple-elf/allure-report-action@master
         with:
           allure_results: allure-results
-          allure_history: history
+          allure_history: allure-history
           keep_reports: 10  # Mantener últimos 10 reportes para el Trend
 
-      # Paso 6: Subir reporte como artifact descargable
+      # Paso 6: Verificar contenido generado
+      - name: 🔍 Verificar reporte generado
+        run: |
+          echo "Contenido de allure-history:"
+          ls -la allure-history/ || echo "allure-history no existe"
+          echo "---"
+          ls allure-history/index.html 2>/dev/null && echo "✅ index.html encontrado" || echo "❌ index.html NO encontrado"
+
+      # Paso 7: Subir reporte como artifact descargable
       - name: 📤 Subir reporte Allure como artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -155,7 +165,7 @@ jobs:
           path: allure-history/
           retention-days: 30
 
-      # Paso 7: Publicar reporte en GitHub Pages
+      # Paso 8: Publicar reporte en GitHub Pages
       - name: 🌐 Publicar en GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
