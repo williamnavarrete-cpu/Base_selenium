@@ -214,6 +214,8 @@ def config_driver_webdriver_manager(context):
     options.add_argument("--disable-dev-shm-usage")  # Evita errores de memoria compartida
     options.add_argument("--no-sandbox")              # Necesario para ejecutar como root
     options.add_argument("--disable-gpu")             # Evita errores de GPU en servidores
+    options.add_argument("--headless=new")            # Ejecuta sin interfaz gráfica (necesario en CI)
+    options.add_argument("--window-size=1920,1080")   # Resolución fija para screenshots consistentes
 
     # Crea la instancia del navegador con el service y las opciones
     context.browser = webdriver.Chrome(service=service, options=options)
