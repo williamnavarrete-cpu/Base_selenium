@@ -61,34 +61,47 @@ jobs:
           python-version: "3.11"
           cache: "pip"  # Cachea dependencias para acelerar ejecuciones futuras
 
+      # Paso 2.5: Configurar Chrome estable
+      - name: 🌐 Configurar Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       # Paso 3: Instalar dependencias del proyecto
       - name: 📦 Instalar dependencias
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install webdriver-manager --upgrade
 
       # Paso 4: Configurar variables de entorno
       - name: ⚙️ Crear archivo .env
         run: |
-          cat <<EOF > .env
-          EXECUTION_TYPE=manager
-          BROWSER=chrome
-          URL=https://hakatools.hakalab.com
-          TIME_IMPLICITY=10
-          EXECUTOR_NAME=GitHub Actions
-          EXECUTOR_BUILD_NAME=${{ github.workflow }} - Run #${{ github.run_number }}
-          EXECUTOR_TYPE=github
-          EOF
+          echo "EXECUTION_TYPE=manager" > .env
+          echo "BROWSER=chrome" >> .env
+          echo "URL=https://hakatools.hakalab.com" >> .env
+          echo "TIME_IMPLICITY=10" >> .env
+          echo "EXECUTOR_NAME=GitHub Actions" >> .env
+          echo "EXECUTOR_BUILD_NAME=${{ github.workflow }} - Run #${{ github.run_number }}" >> .env
+          echo "EXECUTOR_TYPE=github" >> .env
+          cat .env
 
       # Paso 5: Ejecutar los tests con Behave + Allure formatter
       - name: 🚀 Ejecutar escenarios con tag ${{ matrix.tag }}
         run: |
+          echo "=== Verificando Chrome ==="
+          google-chrome --version || true
+          echo "=== Verificando .env ==="
+          cat .env
+          echo "=== Ejecutando tests ==="
           behave \
             -f allure_behave.formatter:AllureFormatter \
             -o allure-results \
             --tags="${{ matrix.tag }}" \
             --no-capture \
-            ./features
+            ./features 2>&1 || true
+          echo "=== Resultados generados ==="
+          ls -la allure-results/
         continue-on-error: true  # Continuar aunque el test falle (para generar reporte)
 
       # Paso 6: Subir resultados como artifact para el job de reporte

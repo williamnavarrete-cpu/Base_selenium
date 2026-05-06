@@ -199,7 +199,12 @@ def config_driver_webdriver_manager(context):
     if browser == "chrome":
         # ChromeDriverManager().install() descarga el chromedriver correcto
         # y retorna la ruta al ejecutable descargado
-        service = Service(ChromeDriverManager().install())
+        try:
+            service = Service(ChromeDriverManager().install())
+        except Exception as e:
+            print(f"> WebDriverManager falló: {e}")
+            print("> Intentando sin service explícito (Chrome del sistema)...")
+            service = None
     else:
         raise Exception(f"Navegador no soportado por WebDriver Manager: {browser}")
 
@@ -218,7 +223,10 @@ def config_driver_webdriver_manager(context):
     options.add_argument("--window-size=1920,1080")   # Resolución fija para screenshots consistentes
 
     # Crea la instancia del navegador con el service y las opciones
-    context.browser = webdriver.Chrome(service=service, options=options)
+    if service:
+        context.browser = webdriver.Chrome(service=service, options=options)
+    else:
+        context.browser = webdriver.Chrome(options=options)
     return context.browser
 
 
