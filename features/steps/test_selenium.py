@@ -35,19 +35,14 @@ from helper.pages.page_hakatoolsl import PageModel  # Page Object con los locali
 def ingreso_a_hakatools(context):
     """
     Step GIVEN: Navega a la URL de la aplicación HakaTools.
-
-    Este es el paso de precondición que abre el navegador en la URL configurada.
-    La URL se lee de la variable de entorno "URL" definida en el archivo .env
-
-    Args:
-        context: Objeto de Behave con context.browser (WebDriver) disponible.
-
-    Ejemplo en .feature:
-        Given ingreso a hakatools
     """
-    # _go_to_url navega el browser a la URL especificada
-    # os.getenv("URL") lee la URL desde las variables de entorno (.env)
-    context.browser.get(os.getenv("URL"))
+    url = os.getenv("URL")
+    context.browser.get(url)
+    # Debug: imprimir título y URL actual para verificar carga
+    print(f"> URL solicitada: {url}")
+    print(f"> URL actual: {context.browser.current_url}")
+    print(f"> Título: {context.browser.title}")
+    print(f"> Page source (primeros 500 chars): {context.browser.page_source[:500]}")
 
 
 @when(u'selecciono la lista "{nombre_card}"')
