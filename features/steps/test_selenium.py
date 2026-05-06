@@ -36,13 +36,7 @@ def ingreso_a_hakatools(context):
     """
     Step GIVEN: Navega a la URL de la aplicación HakaTools.
     """
-    url = os.getenv("URL")
-    context.browser.get(url)
-    # Debug: imprimir título y URL actual para verificar carga
-    print(f"> URL solicitada: {url}")
-    print(f"> URL actual: {context.browser.current_url}")
-    print(f"> Título: {context.browser.title}")
-    print(f"> Page source (primeros 500 chars): {context.browser.page_source[:500]}")
+    context.browser.get(os.getenv("URL"))
 
 
 @when(u'selecciono la lista "{nombre_card}"')
