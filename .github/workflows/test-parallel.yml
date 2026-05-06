@@ -54,6 +54,7 @@ jobs:
             -o allure-results \
             --tags="${{ matrix.tag }}" \
             --no-capture \
+            --no-skipped \
             ./features
         continue-on-error: true
 
