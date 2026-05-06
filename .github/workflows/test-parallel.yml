@@ -104,20 +104,33 @@ jobs:
         run: |
           echo "=== Verificando Chrome ==="
           google-chrome --version || true
+          which chromedriver || true
+          chromedriver --version || true
           echo "=== Verificando variables de entorno ==="
           echo "EXECUTION_TYPE=$EXECUTION_TYPE"
           echo "BROWSER=$BROWSER"
           echo "URL=$URL"
+          echo "=== Contenido .env ==="
+          cat .env
           echo "=== Ejecutando tests ==="
           behave \
             -f allure_behave.formatter:AllureFormatter \
             -o allure-results \
             --tags="${{ matrix.tag }}" \
             --no-capture \
-            ./features 2>&1 || true
+            ./features 2>&1 | tee test-output.log || true
           echo "=== Resultados generados ==="
-          ls -la allure-results/
-        continue-on-error: true  # Continuar aunque el test falle (para generar reporte)
+          ls -la allure-results/ || true
+        continue-on-error: true
+
+      # Paso 5.5: Subir logs para debug
+      - name: 📋 Subir logs de ejecución
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-logs-${{ strategy.job-index }}
+          path: test-output.log
+          retention-days: 5
 
       # Paso 6: Subir resultados como artifact para el job de reporte
       - name: 📤 Subir resultados de Allure
