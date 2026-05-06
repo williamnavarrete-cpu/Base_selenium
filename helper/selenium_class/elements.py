@@ -79,7 +79,7 @@ class Elements:
                 self.__browser,                                    # Driver del navegador
                 int(os.getenv("TIME_IMPLICITY", 10))              # Timeout en segundos (default 10)
             ).until(
-                expected_conditions.presence_of_element_located(element_by)  # Condición a cumplir
+                expected_conditions.visibility_of_element_located(element_by)  # Condición a cumplir
             )
         except Exception as ex:
             # Si ocurre un timeout o error, se imprime el detalle
