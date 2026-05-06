@@ -1,26 +1,9 @@
 """
-=============================================================================
 Módulo: environment.py
-Descripción: Archivo de configuración de hooks de Behave.
-             Behave busca automáticamente este archivo en la carpeta features/
-             y ejecuta las funciones definidas aquí en los momentos correspondientes
-             del ciclo de vida de las pruebas.
-
-Arquitectura de Plugins:
-    Este archivo actúa como "puente" entre Behave y el sistema de plugins (pluggy).
-    En lugar de escribir toda la lógica aquí, delega a plugins registrados:
-    - SeleniumPlugin: gestiona el navegador
-    - AllurePlugin: gestiona la reportería
-
-Ciclo de vida de Behave:
-    before_all → before_feature → before_tag → before_scenario → before_step
-    [ejecución del step]
-    after_step → after_scenario → after_tag → after_feature → after_all
-=============================================================================
+Descripción: Hooks de Behave. Delega al sistema de plugins (pluggy).
 """
 
 import pluggy
-from dotenv import load_dotenv
 
 from helper.plugins.AllurePlugin import AllurePlugin
 from helper.plugins.PluginSpec import PluginSpec
@@ -28,7 +11,6 @@ from helper.plugins.SeleniumPlugin import SeleniumPlugin
 
 pm = pluggy.PluginManager("hooks")
 pm.add_hookspecs(PluginSpec)
-
 pm.register(SeleniumPlugin())
 pm.register(AllurePlugin())
 

@@ -1,15 +1,7 @@
-# Basic Web arquetype
 behave~=1.2.6
 selenium>=4.10.0
 allure-behave~=2.9.45
 assertpy
 webdriver-manager
 pluggy>=1.0.0,<2.0.0
-
-# Utilities
-virtualenv~=20.14.0
 python-dotenv~=0.20.0
-
-
-
-

@@ -1,0 +1,35 @@
+{
+  "uid" : "b1a8273437954620fa374b796ffaacdd",
+  "children" : [ {
+    "name" : "historia hu-1",
+    "children" : [ {
+      "name" : "Valido formulario basico en hakatools -- @1.1 ejecucion combinatoria 1",
+      "uid" : "355148d07dfbb1",
+      "parentUid" : "e4da370d2d29adf9763c4da8a116e2d2",
+      "status" : "failed",
+      "time" : {
+        "start" : 1774377074736,
+        "stop" : 1774377116489,
+        "duration" : 41753
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ "\"hakito@hakalab.com\"", "\"calle prueba 123\"", "\"calle permanente prueba 123 \"", "\"Hakito\"" ]
+    }, {
+      "name" : "Valido formulario basico en hakatools -- @2.1 ejecucion combinatoria 2",
+      "uid" : "f7bad96489b320a0",
+      "parentUid" : "e4da370d2d29adf9763c4da8a116e2d2",
+      "status" : "failed",
+      "time" : {
+        "start" : 1774377116731,
+        "stop" : 1774377174235,
+        "duration" : 57504
+      },
+      "flaky" : false,
+      "newFailed" : false,
+      "parameters" : [ "\"hakito@hakalab.com\"", "\"calle prueba 123\"", "\"calle permanente prueba 123 \"", "\"Hakito\"" ]
+    } ],
+    "uid" : "e4da370d2d29adf9763c4da8a116e2d2"
+  } ],
+  "name" : "behaviors"
+}
