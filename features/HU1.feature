@@ -8,7 +8,7 @@ Feature: HU-721 - Formulario de registro básico de contacto
     CA2: Al presionar "Enviar", el sistema muestra un resumen con los datos ingresados.
     CA3: Los datos del resumen deben coincidir exactamente con lo ingresado.
 
-  @hakatools @formulario_basico @HU-721
+  @hakatools @formulario_basico
   Scenario Outline: Registro exitoso de datos de contacto en formulario básico
     Given ingreso a hakatools
     When selecciono la lista "Formularios"
