@@ -26,5 +26,5 @@ Feature: HU-721 - Formulario de registro básico de contacto
 
   @HU-3
   Examples: ejecucion combinatoria 2
-    | usuario   | correo                | direccion           | direccion_permanente            |
-    | "Hakito"  | "hakito@hakalab.com"  | "calle prueba 123"  | "calle permanente prueba 123 "  |
+    | usuario    | correo                 | direccion            | direccion_permanente             |
+    | "Hakita"   | "hakita@hakalab.com"   | "avenida test 456"   | "avenida permanente test 456 "   |
