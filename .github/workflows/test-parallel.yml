@@ -79,11 +79,19 @@ jobs:
           path: allure-results
           merge-multiple: true
 
+      - name: 🔍 Verificar resultados descargados
+        run: |
+          echo "Archivos descargados:"
+          find allure-results -name "*-result.json" | wc -l
+          echo "JSONs:"
+          ls allure-results/*-result.json 2>/dev/null || echo "Sin resultados"
+
       - name: 📊 Generar reporte Allure
         uses: simple-elf/allure-report-action@master
         with:
           allure_results: allure-results
           allure_report: allure-report
+          keep_reports: 1
 
       - name: 🌐 Publicar en GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -91,3 +99,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
+          force_orphan: true
