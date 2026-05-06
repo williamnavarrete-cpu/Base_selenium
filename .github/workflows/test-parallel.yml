@@ -61,6 +61,24 @@ jobs:
         if: always()
         run: cat behave-output.txt
 
+      - name: 🔍 Analizar resultados
+        if: always()
+        run: |
+          echo "=== Archivos generados ==="
+          ls -la allure-results/ || echo "No hay resultados"
+          echo "=== Contenido de result JSONs ==="
+          for f in allure-results/*-result.json; do
+            echo "--- $f ---"
+            python3 -c "
+          import json
+          data = json.load(open('$f'))
+          print(f\"  Name: {data.get('name', 'N/A')}\")
+          print(f\"  Status: {data.get('status', 'N/A')}\")
+          print(f\"  Message: {data.get('statusDetails', {}).get('message', 'N/A')[:300]}\")
+          print(f\"  Trace: {data.get('statusDetails', {}).get('trace', 'N/A')[:500]}\")
+          " 2>&1 || true
+          done
+
       - name: 📤 Subir resultados Allure
         uses: actions/upload-artifact@v4
         if: always()
