@@ -1,80 +1,42 @@
-# =============================================================================
-# GitHub Actions - Ejecución paralela de escenarios de automatización
-#
-# Este workflow ejecuta los escenarios de prueba en PARALELO usando una
-# estrategia de matrix. Cada tag se ejecuta en un job independiente y
-# simultáneo, reduciendo el tiempo total de ejecución.
-#
-# Flujo:
-#   1. Se dispara en push/PR a main o manualmente
-#   2. Ejecuta cada tag en un job paralelo con Chrome headless
-#   3. Sube los resultados de cada job como artifacts
-#   4. Un job final consolida todos los resultados y genera el reporte Allure
-#   5. Publica el reporte en GitHub Pages
-# =============================================================================
-
 name: 🧪 Tests Paralelos - Selenium + Behave + Allure
 
-# Cuándo se ejecuta el workflow
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:  # Permite ejecución manual desde la UI de GitHub
+  workflow_dispatch:
 
-# Permisos necesarios para publicar en GitHub Pages
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
-  # =========================================================================
-  # JOB 1: Ejecutar tests en paralelo (un job por cada tag)
-  # =========================================================================
   test:
     name: "🧪 Test: ${{ matrix.tag }}"
     runs-on: ubuntu-latest
 
-    # MATRIX: Define los escenarios que se ejecutan EN PARALELO
-    # Cada entrada genera un job independiente que corre simultáneamente
     strategy:
-      fail-fast: false  # No cancelar los demás jobs si uno falla
+      fail-fast: false
       matrix:
         tag:
           - "@HU-2"
           - "@HU-3"
-        # Para agregar más escenarios en paralelo, solo agrega tags aquí:
-        # - "@HU-4"
-        # - "@smoke"
 
     steps:
-      # Paso 1: Descargar el código del repositorio
       - name: 📥 Checkout código
         uses: actions/checkout@v4
 
-      # Paso 2: Configurar Python
       - name: 🐍 Configurar Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"  # Cachea dependencias para acelerar ejecuciones futuras
+          cache: "pip"
 
-      # Paso 2.5: Configurar Chrome estable
-      - name: 🌐 Configurar Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable
-
-      # Paso 3: Instalar dependencias del proyecto
       - name: 📦 Instalar dependencias
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install webdriver-manager --upgrade
 
-      # Paso 4: Configurar variables de entorno
       - name: ⚙️ Crear archivo .env
         run: |
           echo "EXECUTION_TYPE=manager" > .env
@@ -82,58 +44,20 @@ jobs:
           echo "URL=https://hakatools.hakalab.com" >> .env
           echo "TIME_IMPLICITY=10" >> .env
           echo "EXECUTOR_NAME=GitHub Actions" >> .env
-          echo "EXECUTOR_BUILD_NAME=${{ github.workflow }} - Run #${{ github.run_number }}" >> .env
+          echo "EXECUTOR_BUILD_NAME=Run #${{ github.run_number }}" >> .env
           echo "EXECUTOR_TYPE=github" >> .env
-          cat .env
-        env:
-          EXECUTION_TYPE: manager
-          BROWSER: chrome
-          URL: https://hakatools.hakalab.com
-          TIME_IMPLICITY: "10"
 
-      # Paso 5: Ejecutar los tests con Behave + Allure formatter
       - name: 🚀 Ejecutar escenarios con tag ${{ matrix.tag }}
-        env:
-          EXECUTION_TYPE: manager
-          BROWSER: chrome
-          URL: https://hakatools.hakalab.com
-          TIME_IMPLICITY: "10"
-          EXECUTOR_NAME: GitHub Actions
-          EXECUTOR_BUILD_NAME: "${{ github.workflow }} - Run #${{ github.run_number }}"
-          EXECUTOR_TYPE: github
         run: |
-          echo "=== Verificando Chrome ==="
-          google-chrome --version || true
-          which chromedriver || true
-          chromedriver --version || true
-          echo "=== Verificando variables de entorno ==="
-          echo "EXECUTION_TYPE=$EXECUTION_TYPE"
-          echo "BROWSER=$BROWSER"
-          echo "URL=$URL"
-          echo "=== Contenido .env ==="
-          cat .env
-          echo "=== Ejecutando tests ==="
           behave \
             -f allure_behave.formatter:AllureFormatter \
             -o allure-results \
             --tags="${{ matrix.tag }}" \
             --no-capture \
-            ./features 2>&1 | tee test-output.log || true
-          echo "=== Resultados generados ==="
-          ls -la allure-results/ || true
+            ./features
         continue-on-error: true
 
-      # Paso 5.5: Subir logs para debug
-      - name: 📋 Subir logs de ejecución
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-logs-${{ strategy.job-index }}
-          path: test-output.log
-          retention-days: 5
-
-      # Paso 6: Subir resultados como artifact para el job de reporte
-      - name: 📤 Subir resultados de Allure
+      - name: 📤 Subir resultados Allure
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -141,76 +65,30 @@ jobs:
           path: allure-results/
           retention-days: 5
 
-  # =========================================================================
-  # JOB 2: Consolidar resultados y generar reporte Allure
-  # =========================================================================
   report:
     name: "📊 Generar Reporte Allure"
     runs-on: ubuntu-latest
-    needs: test  # Espera a que TODOS los jobs de test terminen
-    if: always()  # Ejecutar siempre, incluso si algún test falló
+    needs: test
+    if: always()
 
     steps:
-      # Paso 1: Descargar el código (necesario para el historial)
-      - name: 📥 Checkout código
-        uses: actions/checkout@v4
-
-      # Paso 2: Descargar TODOS los artifacts de los jobs paralelos
       - name: 📥 Descargar resultados de todos los jobs
         uses: actions/download-artifact@v4
         with:
           pattern: allure-results-*
-          path: allure-results-all
+          path: allure-results
           merge-multiple: true
 
-      # Paso 3: Consolidar resultados en una sola carpeta
-      - name: 📁 Consolidar resultados
-        run: |
-          mkdir -p allure-results
-          cp -r allure-results-all/* allure-results/ 2>/dev/null || true
-
-      # Paso 4: Obtener historial previo de GitHub Pages (para Trends)
-      - name: 📈 Obtener historial previo para Trends
-        run: |
-          mkdir -p allure-results/history
-          if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
-            git fetch origin gh-pages --depth=1
-            git checkout origin/gh-pages -- last-history/ 2>/dev/null || true
-            if [ -d "last-history" ]; then
-              cp -r last-history/* allure-results/history/ 2>/dev/null || true
-            fi
-          fi
-
-      # Paso 5: Generar el reporte HTML con Allure
       - name: 📊 Generar reporte Allure
         uses: simple-elf/allure-report-action@master
         with:
           allure_results: allure-results
-          allure_history: allure-history
-          keep_reports: 10  # Mantener últimos 10 reportes para el Trend
+          allure_report: allure-report
 
-      # Paso 6: Verificar contenido generado
-      - name: 🔍 Verificar reporte generado
-        run: |
-          echo "Contenido de allure-history:"
-          ls -la allure-history/ || echo "allure-history no existe"
-          echo "---"
-          ls allure-history/index.html 2>/dev/null && echo "✅ index.html encontrado" || echo "❌ index.html NO encontrado"
-
-      # Paso 7: Subir reporte como artifact descargable
-      - name: 📤 Subir reporte Allure como artifact
+      - name: 📤 Subir reporte HTML
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: allure-report-html
-          path: allure-history/
+          name: allure-report
+          path: allure-report/
           retention-days: 30
-
-      # Paso 8: Publicar reporte en GitHub Pages
-      - name: 🌐 Publicar en GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-history

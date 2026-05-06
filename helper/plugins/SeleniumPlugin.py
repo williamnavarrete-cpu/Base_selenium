@@ -255,21 +255,9 @@ class SeleniumPlugin:
             1. Carga las variables de entorno desde el archivo .env
             2. Inicializa el navegador según la configuración
             3. Imprime el nombre del escenario para trazabilidad
-
-        Args:
-            context: Objeto compartido de Behave.
-            scenario: Objeto del escenario actual con nombre, tags, etc.
         """
-        # load_dotenv lee el archivo .env y carga las variables al entorno
-        # Esto permite cambiar configuración sin modificar código
         load_dotenv(dotenv_path=".env", override=True)
-
-        # Debug: verificar que las variables se cargaron
-        print(f"> ENV cargado - EXECUTION_TYPE={os.getenv('EXECUTION_TYPE')}, BROWSER={os.getenv('BROWSER')}")
-
-        # Ejecuta toda la lógica de inicialización del navegador
         execution_selenium(context)
-
         print("Iniciando escenario:", scenario.name)
 
     @PluginSpec.hookimpl
