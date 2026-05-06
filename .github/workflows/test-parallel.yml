@@ -54,8 +54,12 @@ jobs:
             -o allure-results \
             --tags="${{ matrix.tag }}" \
             --no-capture \
-            ./features
+            ./features 2>&1 | tee behave-output.txt
         continue-on-error: true
+
+      - name: 📋 Mostrar output de Behave
+        if: always()
+        run: cat behave-output.txt
 
       - name: 📤 Subir resultados Allure
         uses: actions/upload-artifact@v4
