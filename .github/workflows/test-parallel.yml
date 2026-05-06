@@ -1,0 +1,150 @@
+# =============================================================================
+# GitHub Actions - Ejecución paralela de escenarios de automatización
+#
+# Este workflow ejecuta los escenarios de prueba en PARALELO usando una
+# estrategia de matrix. Cada tag se ejecuta en un job independiente y
+# simultáneo, reduciendo el tiempo total de ejecución.
+#
+# Flujo:
+#   1. Se dispara en push/PR a main o manualmente
+#   2. Ejecuta cada tag en un job paralelo con Chrome headless
+#   3. Sube los resultados de cada job como artifacts
+#   4. Un job final consolida todos los resultados y genera el reporte Allure
+#   5. Publica el reporte en GitHub Pages
+# =============================================================================
+
+name: 🧪 Tests Paralelos - Selenium + Behave + Allure
+
+# Cuándo se ejecuta el workflow
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Permite ejecución manual desde la UI de GitHub
+
+jobs:
+  # =========================================================================
+  # JOB 1: Ejecutar tests en paralelo (un job por cada tag)
+  # =========================================================================
+  test:
+    name: "🧪 Test: ${{ matrix.tag }}"
+    runs-on: ubuntu-latest
+
+    # MATRIX: Define los escenarios que se ejecutan EN PARALELO
+    # Cada entrada genera un job independiente que corre simultáneamente
+    strategy:
+      fail-fast: false  # No cancelar los demás jobs si uno falla
+      matrix:
+        tag:
+          - "@HU-2"
+          - "@HU-3"
+        # Para agregar más escenarios en paralelo, solo agrega tags aquí:
+        # - "@HU-4"
+        # - "@smoke"
+
+    steps:
+      # Paso 1: Descargar el código del repositorio
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      # Paso 2: Configurar Python
+      - name: 🐍 Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"  # Cachea dependencias para acelerar ejecuciones futuras
+
+      # Paso 3: Instalar dependencias del proyecto
+      - name: 📦 Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Paso 4: Configurar variables de entorno
+      - name: ⚙️ Crear archivo .env
+        run: |
+          cat <<EOF > .env
+          EXECUTION_TYPE=manager
+          BROWSER=chrome
+          URL=https://hakatools.hakalab.com
+          TIME_IMPLICITY=10
+          EXECUTOR_NAME=GitHub Actions
+          EXECUTOR_BUILD_NAME=${{ github.workflow }} - Run #${{ github.run_number }}
+          EXECUTOR_TYPE=github
+          EOF
+
+      # Paso 5: Ejecutar los tests con Behave + Allure formatter
+      - name: 🚀 Ejecutar escenarios con tag ${{ matrix.tag }}
+        run: |
+          behave \
+            -f allure_behave.formatter:AllureFormatter \
+            -o allure-results \
+            --tags="${{ matrix.tag }}" \
+            --no-capture \
+            ./features
+        continue-on-error: true  # Continuar aunque el test falle (para generar reporte)
+
+      # Paso 6: Subir resultados como artifact para el job de reporte
+      - name: 📤 Subir resultados de Allure
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-${{ strategy.job-index }}
+          path: allure-results/
+          retention-days: 5
+
+  # =========================================================================
+  # JOB 2: Consolidar resultados y generar reporte Allure
+  # =========================================================================
+  report:
+    name: "📊 Generar Reporte Allure"
+    runs-on: ubuntu-latest
+    needs: test  # Espera a que TODOS los jobs de test terminen
+    if: always()  # Ejecutar siempre, incluso si algún test falló
+
+    steps:
+      # Paso 1: Descargar el código (necesario para el historial)
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      # Paso 2: Descargar TODOS los artifacts de los jobs paralelos
+      - name: 📥 Descargar resultados de todos los jobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          path: allure-results-all
+          merge-multiple: true
+
+      # Paso 3: Consolidar resultados en una sola carpeta
+      - name: 📁 Consolidar resultados
+        run: |
+          mkdir -p allure-results
+          cp -r allure-results-all/* allure-results/ 2>/dev/null || true
+
+      # Paso 4: Obtener historial previo de GitHub Pages (para Trends)
+      - name: 📈 Obtener historial previo para Trends
+        run: |
+          mkdir -p allure-results/history
+          if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            git fetch origin gh-pages --depth=1
+            git checkout origin/gh-pages -- history/ 2>/dev/null || true
+            cp -r history/* allure-results/history/ 2>/dev/null || true
+          fi
+
+      # Paso 5: Generar el reporte HTML con Allure
+      - name: 📊 Generar reporte Allure
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: allure-results
+          allure_history: history
+          keep_reports: 10  # Mantener últimos 10 reportes para el Trend
+
+      # Paso 6: Publicar reporte en GitHub Pages
+      - name: 🌐 Publicar en GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history

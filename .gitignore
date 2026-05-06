@@ -1,0 +1,48 @@
+# ========================
+# Variables de entorno
+# ========================
+.env
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ========================
+# Entorno virtual
+# ========================
+venv/
+.venv/
+env/
+
+# ========================
+# Reportes generados
+# ========================
+report/allure-results/
+allure-report/
+
+# ========================
+# IDEs y editores
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ========================
+# Sistema operativo
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Logs y temporales
+# ========================
+*.log
+debug.log
