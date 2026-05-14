@@ -7,6 +7,7 @@ import os
 
 from assertpy import soft_assertions
 from behave import given, when, then
+from selenium.webdriver.common.by import By
 
 from helper.pages.page_hakatoolsl import PageModel
 
@@ -55,3 +56,5 @@ def validar_formulario(context, nombre, correo, direccion, direccion_permanente)
         assert correo in resultado, "el campo correo del formulario no coincide"
         assert direccion in resultado, "el campo direccion del formulario no coincide"
         assert direccion_permanente in resultado, "el campo direccion permanente del formulario no coincide"
+
+

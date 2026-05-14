@@ -1,0 +1,42 @@
+{
+  "2b011fe08e3c668dff4abf1d9a85cc43" : {
+    "statistic" : {
+      "failed" : 1,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 0,
+      "unknown" : 0,
+      "total" : 1
+    },
+    "items" : [ {
+      "uid" : "f7bad96489b320a0",
+      "status" : "failed",
+      "statusDetails" : "AssertionError: el campo direccion permanente del formulario no coincide\n",
+      "time" : {
+        "start" : 1774377116731,
+        "stop" : 1774377174235,
+        "duration" : 57504
+      }
+    } ]
+  },
+  "6a560ca0668edfd96d54ce2e6575176d" : {
+    "statistic" : {
+      "failed" : 1,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 0,
+      "unknown" : 0,
+      "total" : 1
+    },
+    "items" : [ {
+      "uid" : "355148d07dfbb1",
+      "status" : "failed",
+      "statusDetails" : "AssertionError: el campo direccion permanente del formulario no coincide\n",
+      "time" : {
+        "start" : 1774377074736,
+        "stop" : 1774377116489,
+        "duration" : 41753
+      }
+    } ]
+  }
+}

@@ -6,7 +6,7 @@ Feature: HU-721 - Formulario de registro básico de contacto
   Criterios de Aceptación:
     CA1: El usuario puede ingresar nombre, correo, dirección y dirección permanente.
     CA2: Al presionar "Enviar", el sistema muestra un resumen con los datos ingresados.
-    CA3: Los datos del resumen deben coincidir exactamente con lo ingresado.
+    CA34: Los datos del resumen deben coincidir exactamente con lo ingresado.
 
   @hakatools @formulario_basico
   Scenario Outline: Registro exitoso de datos de contacto en formulario básico
@@ -18,6 +18,7 @@ Feature: HU-721 - Formulario de registro básico de contacto
     And ingreso direccion permanente <direccion_permanente>
     And selecciono opcion enviar
     Then valido resultados de formulario <usuario><correo><direccion><direccion_permanente>
+
 
   @HU-2
   Examples: ejecucion combinatoria 1
